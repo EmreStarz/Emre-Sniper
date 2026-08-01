@@ -1,2 +1,5 @@
-# Emre-Sniper
-Automated console script to join any type of queue inside Discord.
+# EmreSniper :dart:
+
+Enjoy
+
+idk if this is allowed on pvptiers/mctiers so use at your own risk <3

@@ -112,6 +112,75 @@
         }
     }
 
+    function makeDraggable(handle, target) {
+        let dragging = false;
+        let startX = 0;
+        let startY = 0;
+        let offsetX = 0;
+        let offsetY = 0;
+        let pendingX = 0;
+        let pendingY = 0;
+        let frame = null;
+
+        handle.addEventListener('pointerdown', (e) => {
+            if (e.button !== 0) return;
+            if (e.target.closest('.es-close-btn')) return;
+
+            dragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            handle.setPointerCapture(e.pointerId);
+            e.preventDefault();
+        });
+
+        handle.addEventListener('pointermove', (e) => {
+            if (!dragging) return;
+
+            pendingX = offsetX + (e.clientX - startX);
+            pendingY = offsetY + (e.clientY - startY);
+
+            if (!frame) {
+                frame = requestAnimationFrame(() => {
+                    frame = null;
+                    target.style.transform = `translate(${pendingX}px, ${pendingY}px)`;
+                });
+            }
+        });
+
+        const stopDrag = (e) => {
+            if (!dragging) return;
+
+            dragging = false;
+            offsetX = pendingX;
+            offsetY = pendingY;
+
+            if (frame) {
+                cancelAnimationFrame(frame);
+                frame = null;
+            }
+        };
+
+        handle.addEventListener('pointerup', stopDrag);
+        handle.addEventListener('pointercancel', stopDrag);
+
+        const reset = () => {
+            dragging = false;
+            offsetX = 0;
+            offsetY = 0;
+            pendingX = 0;
+            pendingY = 0;
+
+            if (frame) {
+                cancelAnimationFrame(frame);
+                frame = null;
+            }
+
+            target.style.transform = '';
+        };
+
+        return { reset };
+    }
+
     const style = document.createElement('style');
     style.textContent = `
         @keyframes emreSlideIn {
@@ -169,6 +238,7 @@
             color: #e8eaf0;
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
+            will-change: transform;
         }
 
         .es-container::before {
@@ -208,6 +278,14 @@
             gap: 12px;
             position: relative;
             overflow: hidden;
+            cursor: grab;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        .es-header:active {
+            cursor: grabbing;
         }
 
         .es-header::after {
@@ -454,6 +532,18 @@
             box-shadow: 0 6px 22px rgba(168, 85, 247, 0.7);
         }
 
+        .es-reset {
+            margin-top: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #e8eaf0;
+            box-shadow: none;
+        }
+        .es-reset:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(168, 85, 247, 0.5);
+        }
+
         .es-footer {
             text-align: center;
             font-size: 10px;
@@ -504,6 +594,10 @@
                 <button class="es-button es-start" id="es-start">🌸 Start</button>
                 <button class="es-button es-stop" id="es-stop" disabled>💗 Stop</button>
             </div>
+
+            <div class="es-btn-row">
+                <button class="es-button es-reset" id="es-reset">💫 Original Position</button>
+            </div>
         </div>
 
         <div class="es-footer">
@@ -512,8 +606,17 @@
     `;
     document.body.appendChild(container);
 
+    const draggable = makeDraggable(container.querySelector('.es-header'), container);
+
+    container.addEventListener('animationend', function removeEntrance(e) {
+        if (e.animationName === 'emreSlideIn') {
+            container.style.animation = 'emreShift 10s ease infinite, emreGlow 3s ease-in-out infinite';
+        }
+    });
+
     const startBtn = document.getElementById('es-start');
     const stopBtn = document.getElementById('es-stop');
+    const resetBtn = document.getElementById('es-reset');
     const closeBtn = document.getElementById('es-close-main');
     const status = document.getElementById('es-status');
     const clicks = document.getElementById('es-clicks');
@@ -570,6 +673,10 @@
         container.remove();
         window.emreSniperActive = false;
         console.log("EmreSniper unloaded (ó﹏ò｡)");
+    };
+
+    resetBtn.onclick = () => {
+        draggable.reset();
     };
 
     console.log("💕 EmreSniper Loaded!");

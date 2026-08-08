@@ -21,6 +21,6 @@ Get notified whenever the script is actively attempting to join a queue.
 A clean, lightweight interface that you can move wherever you want.
 
 **5. Seamless Script Abandonment**  
-Easily stop or abandon the script without having to restart everything.
+Easily abandon the script without having to restart Discord.
 
 ### Fast. Simple. Automated. :hammer_and_wrench:
